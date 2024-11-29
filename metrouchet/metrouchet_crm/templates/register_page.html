@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Регистрация
+{% endblock %}
+
+{% block content %}
+<h1>Регистрация</h1>
+<div class="col-4">
+    <form id="add_form" method="post">
+        {% csrf_token %}
+        {{ form }}
+    </form>
+
+    <div class="modal-footer justify-content-md-center">
+        <div class="m-4"><a class="btn btn-outline-primary" href="{{request.META.HTTP_REFERER|escape}}">Назад</a></div>
+        <div class="m-4"><button form="add_form" type="submit" class="btn btn-primary">Сохранить</button></div>
+    </div>
+</div>
+
+{% endblock %}

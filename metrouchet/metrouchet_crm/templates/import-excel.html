@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Импорт файла Excel
+{% endblock %}
+
+{% block content %}
+<h1 class="fs-2">Импорт файла Excel</h1>
+<p>Поля таблицы должны быть в формате:</p>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th scope="col">execution_date</th>
+            <th scope="col">start_time</th>
+            <th scope="col">end_time</th>
+            <th scope="col">comments</th>
+
+
+        </tr>
+    </thead>
+</table>
+
+{% if messages %}
+  {% for message in messages %}
+    {% if message.tags == "success" %}
+       <div class="alert alert-success">{{ message }}</div>
+    {% else %}
+       <div class="alert alert-danger">{{ message }}</div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+
+    <div class="modal-footer justify-content-md-center">
+        <div class="m-4"><a class="btn btn-outline-primary" href="{{request.META.HTTP_REFERER|escape}}">Назад</a></div>
+        <div class="m-4"><button type="submit" class="btn btn-primary">Загрузить</button></div>
+    </div>
+</form>
+
+{% endblock %}

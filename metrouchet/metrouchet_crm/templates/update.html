@@ -1,0 +1,543 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Редактирование заявки
+{% endblock %}
+
+{% block content %}
+
+<h1 class="fs-2">Редактирование заявки № {{ get_orders.id }}</h1>
+<div class="row">
+    <div class="col-md-6">
+        <form id="update_data_form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="shadow p-3 mb-3 bg-body rounded">
+                <h2 class="fs-5">Статус заказа</h2>
+                <label>Статус</label>
+                {{ form.status }}
+            </div>
+            <div class="shadow p-3 mb-3 bg-body rounded">
+                <h2 class="fs-5">Дата и время</h2>
+                    <label>Дата исполнения:</label>
+                    {{ form.execution_date }}
+
+                <div class="row">
+                    <div class="col">
+                        <label>Время от:</label>
+                        {{ form.start_time }}
+                    </div>
+                    <div class="col">
+                        <label>Время до:</label>
+                        {{ form.end_time }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="shadow p-3 mb-3 bg-body rounded">
+                <h2 class="fs-5">Адрес клиента</h2>
+                    <label>Район:</label>
+                    {{ address_form.district }}
+                    <label>Улица:</label>
+                    {{ address_form.street_house }}
+                    <div class="row">
+                        <div class="col">
+                            <label>Квартира:</label>
+                            {{ address_form.apartment }}
+                        </div>
+                        <div class="col">
+                            <label>Подъезд:</label>
+                            {{ address_form.entrance }}
+                        </div>
+                        <div class="col">
+                            <label>Этаж:</label>
+                            {{ address_form.floor }}
+                        </div>
+                        <div class="col">
+                            <label>Домофон:</label>
+                            {{ address_form.intercom }}
+                        </div>
+                    </div>
+                </div>
+
+        <script>
+            $(document).ready(function() {
+                $('#id_address_form-district').select2();
+            });
+        </script>
+
+        <script type="text/javascript">
+        ymaps.ready(init);
+
+        var myMap; // Объявляем переменную для хранения ссылки на карту
+        var suggestView; // Объявляем переменную для хранения ссылки на объект SuggestView
+
+        function init() {
+            // Создаем карту
+            myMap = new ymaps.Map('map', {
+                center: [55.7558, 37.6173], // Координаты центра карты (Москва)
+                zoom: 10 // Уровень масштабирования карты
+            });
+
+            // Инициализация SuggestView с ограничением по области Москвы и Московской области
+            suggestView = new ymaps.SuggestView('{{ address_form.street_house.id_for_label }}', {
+                boundedBy: [
+                    [55.503541, 36.771079], // Юго-Запад Московской области
+                    [56.009657, 38.351852] // Северо-Восток Московской области
+                ]
+            });
+
+            // Обработчик события выбора адреса
+            suggestView.events.add('select', function (e) {
+                updateMap(e.get('item').value); // Обновляем карту при выборе адреса
+            });
+
+            // Обработчик события изменения значения в поле
+            suggestView.events.add('valuechange', function () {
+                // Если значение в поле пустое, то очищаем карту
+                if (!suggestView.state.get('selectedIndex')) {
+                    clearMap();
+                }
+            });
+
+            // Обработчик события для проверки указан ли адрес
+            $(document).ready(function () {
+                var enteredAddress = "{{ address_form.street_house.value|escapejs }}, подъезд: {{ get_orders.address.entrance }}";
+                if (enteredAddress) {
+                    updateMap(enteredAddress);
+                }
+            });
+        }
+
+        function updateMap(selectedAddress) {
+            // Здесь можно выполнить геокодирование для получения координат адреса
+            // После получения координат можно поставить метку на карте
+            ymaps.geocode(selectedAddress)
+                .then(function (res) {
+                    var firstGeoObject = res.geoObjects.get(0);
+                    var coords = firstGeoObject.geometry.getCoordinates();
+
+                    // Очищаем карту перед добавлением новой метки
+                    myMap.geoObjects.removeAll();
+
+                    // Добавляем метку на карту
+                    myMap.geoObjects.add(new ymaps.Placemark(coords, {
+                        balloonContent: selectedAddress
+                    }));
+                });
+        }
+
+        function clearMap() {
+            // Очищаем карту при удалении текста из поля
+            myMap.geoObjects.removeAll();
+        }
+        </script>
+            <div class="shadow p-3 mb-3 bg-body rounded">
+                <h2 class="fs-5">Услуга</h2>
+                <div id="service-formset">
+                    {{ service_formset.management_form }}
+                    {% for service_form in service_formset.forms %}
+                    {{ service_form.id }}
+                        <div class="service-form border border-secondary rounded-2 p-2 mb-1" id="service_form_{{ forloop.counter }}">
+                            <div class="mb-2">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Услуга:</label>
+                                        {{ service_form.service_name }}
+                                    </div>
+                                    <div class="water_name_block col-md-6" style="display: none;">
+                                        <label>Модель счетчика:</label>
+                                        {{ service_form.water_name }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3 align-self-end">
+                                        <label>Холодных счетчиков:</label>
+                                        {{ service_form.cold_water }}
+                                    </div>
+                                    <div class="col-md-3 align-self-end">
+                                        <label>Горячих счетчиков:</label>
+                                        {{ service_form.hot_water }}
+                                    </div>
+                                    <div class="col-md-3 align-self-end">
+                                        <label class="price-label">Сумма:</label>
+                                        {{ service_form.price }}
+                                    </div>
+                                    <div class="col-md-3 align-self-end">
+                                        <label>Оплата мастеру:</label>
+                                        {{ service_form.payment_master }}
+                                    </div>
+                                </div>
+                                {{ service_form.DELETE }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                // Обработчик события для полей cold_water и hot_water
+                $('#service-formset').on('input', '.service-form [name$="cold_water"], [name$="hot_water"]', function () {
+                    var serviceForm = $(this).closest('.service-form');
+                    var selectedService = serviceForm.find('select[name$="service_name"]').val();
+
+                    if (selectedService === '2') {
+                        updatePrice(serviceForm);
+                    } else {
+                        updateServicePrice(serviceForm);
+                    }
+                });
+
+                // Обработчик события для поля service_name
+                $('#service-formset').on('change', '.service-form select[name$="service_name"]', function () {
+                    var selectedService = $(this).val();
+                    var serviceForm = $(this).closest('.service-form');
+                    var waterNameBlock = serviceForm.find('.water_name_block');
+
+                    if (selectedService === '2') {
+                        waterNameBlock.show();  // Используем jQuery метод .show()
+                        updatePrice(serviceForm);
+                    } else {
+                        waterNameBlock.hide();  // Используем jQuery метод .hide()
+                        serviceForm.find('select[name$="water_name"]').val('');
+                        updateServicePrice(serviceForm);
+                    }
+                });
+
+                // Обработчик события для поля water_name
+                $('#service-formset').on('change', '.service-form select[name$="water_name"]', function () {
+                    var serviceForm = $(this).closest('.service-form');
+
+                    // Проверка, чтобы избежать вызова updatePrice для случаев, когда выбран сервис с id не равным 2
+                    if (serviceForm.find('select[name$="service_name"]').val() === '2') {
+                        updatePrice(serviceForm);
+                    }
+                });
+
+                // Функция для обновления цены
+                function updatePrice(container) {
+                    var priceInput = container.find('[name$="price"]');
+                    var existingPrice = priceInput.val();
+
+                    if (!existingPrice || container.hasClass('new-service-form')) {
+                        // Если цены нет или форма новая, выполняем обновление
+                        var waterNameId = container.find('.water_name_block select[name$="water_name"]').val() || 0;
+                        var coldWater = parseInt(container.find('[name$="cold_water"]').val()) || 0;
+                        var hotWater = parseInt(container.find('[name$="hot_water"]').val()) || 0;
+
+                        var data = {
+                            'water_name_id': waterNameId,
+                            'cold_water': coldWater,
+                            'hot_water': hotWater,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        };
+
+                        $.ajax({
+                            type: 'POST',
+                            url: '{% url "get_water_price" %}',
+                            data: data,
+                            dataType: 'json',
+                            success: function (response) {
+                                var waterPrice = response.water_price || 0;
+                                var totalPrice = waterPrice;
+
+                                priceInput.val(totalPrice.toFixed(2));
+                            },
+                            error: function (error) {
+                                console.log('Error:', error);
+                            }
+                        });
+                    }
+                }
+
+                // Функция для обновления цены услуги
+                function updateServicePrice(container) {
+                    var priceInput = container.find('[name$="price"]');
+                    var existingPrice = priceInput.val();
+
+                    if (!existingPrice || container.hasClass('new-service-form')) {
+                        // Если цены нет или форма новая, выполняем обновление
+                        var serviceId = container.find('[name$="service_name"]').val();
+                        var coldWater = parseInt(container.find('[name$="cold_water"]').val()) || 0;
+                        var hotWater = parseInt(container.find('[name$="hot_water"]').val()) || 0;
+
+                        var data = {
+                            'service_id': serviceId,
+                            'cold_water': coldWater,
+                            'hot_water': hotWater,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        };
+
+                        $.ajax({
+                            type: 'POST',
+                            url: '{% url "get_service_price" %}',
+                            data: data,
+                            dataType: 'json',
+                            success: function (response) {
+                                var servicePrice = response.service_price || 0;
+                                var totalPrice = servicePrice;
+
+                                priceInput.val(totalPrice.toFixed(2));
+                            },
+                            error: function (error) {
+                                console.log('Error:', error);
+                            }
+                        });
+                    }
+                }
+                // После загрузки страницы проверяем и обновляем видимость блока и цену
+                $('.service-form').each(function () {
+                    var selectedService = $(this).find('select[name$="service_name"]').val();
+                    var waterNameBlock = $(this).find('.water_name_block');
+
+                    if (selectedService === '2') {
+                        waterNameBlock.show();   // Снова используем jQuery метод .show()
+                        updatePrice($(this));
+                    } else {
+                        waterNameBlock.hide();   // И jQuery метод .hide()
+                        $(this).find('select[name$="water_name"]').val('');
+                        updateServicePrice($(this));
+                    }
+                });
+                // После загрузки страницы помечаем новые формы услуги
+                $('.service-form').each(function () {
+                    var selectedService = $(this).find('select[name$="service_name"]').val();
+                    var waterNameBlock = $(this).find('.water_name_block');
+
+                    if (selectedService === '2') {
+                        waterNameBlock.show();
+                        updatePrice($(this));
+                    } else {
+                        waterNameBlock.hide();
+                        $(this).find('select[name$="water_name"]').val('');
+                        updateServicePrice($(this));
+                    }
+
+                    // Помечаем новые формы услуги
+                    $(this).addClass('new-service-form');
+                });
+            });
+        </script>
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Информация о клиентах</h2>
+            {{ client_formset.management_form }}
+            <div id="client-formset">
+                {% for form in client_formset.forms %}
+                <div class="border border-secondary rounded-2 p-2 mb-1">
+                    <div class="client-form row mb-2">
+                        <div class="col-md-6">
+                            {{ form.id }}
+                            <label>Телефон:</label>
+                            {{ form.phone }}
+                        </div>
+                        <div class="col-md-6">
+                            <label>Имя клиента:</label>
+                            {{ form.client_name }}
+                        </div>
+                        {{ form.DELETE }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Комментарий</h2>
+            <label>Комментарий</label>
+            {{ form.comments }}
+        </div>
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Комментарий мастера</h2>
+            <label>Комментарий мастера:</label>
+            {{ form.comments_masters }}
+         </div>
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Исполнитель</h2>
+            <label>Мастер</label>
+            {{ form.master }}
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div id="water-photo-formset" class="shadow p-3 mb-3 bg-body rounded">
+                    <h2 class="fs-5">Фото счетчиков</h2>
+                    <!-- Формсет для фотографий счетчиков -->
+                    {{ water_photo_formset.management_form }}
+                    {% for water in water_photo_formset.forms %}
+                        <div class="water-photo-form border border-secondary rounded-2 p-2 mb-1">
+                            {{ water.id }}
+                            {{ water }}
+                            <div class="image-preview mb-3">
+                                <img src="" alt="Image Preview" class="img-thumbnail mt-2" style="display: none; width: 100px; height: auto;">
+                            </div>
+                            {% if water.instance.water_photo %}
+                               <a href="{{ water.instance.water_photo.url }}" data-fancybox data-caption="Фото счетчика" style="text-decoration: none;">
+                                   <img src="{{ water.instance.water_photo.url }}" class="img-thumbnail mt-2" alt="Фото счетчика" style="width: 100px; height: auto;">
+                               </a>
+                            {% endif %}
+                            {{ water.DELETE }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div id="document-photo-formset" class="shadow p-3 mb-3 bg-body rounded">
+                    <h2 class="fs-5">Фото документов</h2>
+                    <!-- Формсет для фотографий документов -->
+                    {{ document_photo_formset.management_form }}
+                    {% for document in document_photo_formset.forms %}
+                        <div class="document-photo-form border border-secondary rounded-2 p-2 mb-1">
+                            {{ document.id }}
+                            {{ document }}
+                            <div class="image-preview mb-3">
+                                <img src="" alt="Image Preview" class="img-thumbnail mt-2" style="display: none; width: 100px; height: auto;">
+                            </div>
+                            {% if document.instance.document_photo %}
+                               <a href="{{ document.instance.document_photo.url }}" data-fancybox data-caption="Фото документа" style="text-decoration: none;">
+                                   <img src="{{ document.instance.document_photo.url }}" class="img-thumbnail mt-2" alt="Фото документа" style="width: 100px; height: auto;">
+                               </a>
+                            {% endif %}
+                            {{ document.DELETE }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer justify-content-md-right">
+            <div class="m-4"><a class="btn btn-outline-primary" href="{{request.META.HTTP_REFERER|escape}}">Назад</a></div>
+            <button form="update_data_form" type="submit" class="btn btn-primary">Обновить</button>
+        </div>
+        </form>
+    </div>
+
+<script>
+    Fancybox.bind('[data-fancybox]', {
+    //
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#service-formset').formset({
+            addText: 'Добавить услугу',
+            deleteText: 'Удалить услугу',
+            prefix: 'service_form',
+            addCssClass: 'text-success',
+            deleteCssClass: 'text-danger',
+            removed: function (row) {
+                row.find('input[name$="DELETE"]').prop('checked', true);
+            }
+        });
+
+        $('#add-service-form').on('click', function() {
+            $('#service-formset').formset('addForm');
+        });
+
+            $('#client-formset').formset({
+            addText: 'Добавить клиента',
+            deleteText: 'Удалить клиента',
+            prefix: 'client_form',
+            addCssClass: 'text-success',
+            deleteCssClass: 'text-danger',
+            removed: function (row) {
+                row.find('input[name$="DELETE"]').prop('checked', true);
+            }
+        });
+
+        $('#add-client-form').on('click', function() {
+            $('#client-formset').formset('addForm');
+        });
+
+        $('#water-photo-formset').formset({
+            addText: 'Добавить фото',
+            deleteText: 'Удалить фото',
+            prefix: 'water_photo_form',
+            addCssClass: 'text-success',
+            deleteCssClass: 'text-danger',
+            removed: function (row) {
+                row.find('input[name$="DELETE"]').prop('checked', true);
+            }
+        });
+
+        $('#add-water-photo-formset').on('click', function() {
+            $('#water-photo-formset').formset('addForm');
+        });
+
+        $('#document-photo-formset').formset({
+            addText: 'Добавить фото',
+            deleteText: 'Удалить фото',
+            prefix: 'document_photo_form',
+            addCssClass: 'text-success',
+            deleteCssClass: 'text-danger',
+            removed: function (row) {
+                row.find('input[name$="DELETE"]').prop('checked', true);
+            }
+        });
+
+        $('#add-document-photo-formset').on('click', function() {
+            $('#document-photo-formset').formset('addForm');
+        });
+
+        // Обработчик предварительного просмотра изображений для water-photo-formset
+        $('#water-photo-formset').on('change', 'input[type="file"]', function (event) {
+            var input = event.currentTarget;
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $(input).closest('.water-photo-form').find('.image-preview img').attr('src', e.target.result).show();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+
+        // Обработчик предварительного просмотра изображений для document-photo-formset
+        $('#document-photo-formset').on('change', 'input[type="file"]', function (event) {
+            var input = event.currentTarget;
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $(input).closest('.document-photo-form').find('.image-preview img').attr('src', e.target.result).show();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+    });
+</script>
+
+
+    <div class="col-md-6">
+        <div id="map" style="width: 100%; height: 400px;"></div><br>
+
+        <div class="row">
+            <p class="h6 col-md-6"><strong>Дата создания:</strong> {{ form.instance.date_of_creation|date:"d.m.Y H:i:s" }}</p>
+            <p class="h6 col-md-6"><strong>Принял:</strong> {{ form.instance.author.get_full_name }}</p>
+        </div>
+<!-- Вывод изменений и истории изменений для заказа -->
+    <h5>История изменений</h5>
+<div class="overflow-auto text-secondary" style="max-height: 400px;">
+    <ul class="list-unstyled ml-0">
+        {% for change_entry in all_changes %}
+            {% if change_entry.0 %} <!-- Проверка, является ли запись изменением или исторической записью -->
+                <p>
+                    <b>Дата изменения:</b> {{ change_entry.0 }} <br>
+                    <b>Поле:</b> {{ change_entry.1 }} <br>
+                    <b>Старое значение:</b> {{ change_entry.2 }} <br>
+                    <b>Новое значение:</b> {{ change_entry.3 }} <br>
+                </p>
+                <hr class="my-2">
+            {% else %}
+                <p>
+                    <b>Дата изменения:</b> {{ change_entry.date_added }} <br>
+                    <b>Описание изменения:</b> {{ change_entry.change_description }} <br>
+                </p>
+                <hr class="my-2">
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>
+    </div>
+
+</div>
+
+
+{% endblock %}

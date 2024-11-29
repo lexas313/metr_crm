@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Услуги и цены компании
+{% endblock %}
+
+{% block content %}
+
+{% if company_service_update %}
+<form id="company_service_update" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <button form="company_service_update" type="submit" class="btn btn-primary mt-4">Обновить</button>
+</form>
+{% else %}
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+  Создать услугу
+</button>
+
+{% if messages %}
+    <div class="alert alert-success">
+        {% for m in messages %}
+            {{m}}
+        {% endfor %}
+    </div>
+{% endif %}
+
+
+<div>
+    <table class="table">
+       <thead>
+          <tr>
+            <th scope="col">id</th>
+            <th scope="col">Услуга</th>
+            <th scope="col">Цена</th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+          </tr>
+       </thead>
+        {% for service in company_service %}
+       <tbody>
+          <tr>
+            <th scope="row">{{ service.id }}</th>
+            <td>{{ service.company_service }}</td>
+            <td>{{ service.service_price }}</td>
+            <td><a href="{% url 'company_service_price' service.id %}">Изменить</a></td>
+            <td>
+                <form id="company_service_price_delete{{service.id}}" action="{% url 'company_service_price_delete' service.id %}" method="post">
+                        {% csrf_token %}
+                </form>
+                <a href="javascript:void()" onclick="delete_question{{service.id}}()">Удалить</a>
+                <script>
+                    function delete_question{{service.id}}() {
+                        if (confirm("Вы уверены, что хотите удалить заявку {{service.id}}?")) {
+                            document.getElementById('company_service_price_delete{{service.id}}').submit()
+                        }
+                    }
+                </script>
+            </td>
+          </tr>
+       </tbody>
+        {% endfor %}
+    </table>
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Создание услуги</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="add_form" method="post">
+            {% csrf_token %}
+            {{ form }}
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button form="add_form" type="submit" class="btn btn-primary">Добавить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

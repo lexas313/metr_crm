@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Статусы
+{% endblock %}
+
+{% block content %}
+
+{% if status_name_update %}
+<form id="status_name_update" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <button form="status_name_update" type="submit" class="btn btn-primary mt-4">Обновить</button>
+</form>
+{% else %}
+
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+  Добавить статус
+</button>
+
+{% if messages %}
+    <div class="alert alert-success">
+        {% for m in messages %}
+            {{m}}
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div>
+    <table class="table">
+       <thead>
+          <tr>
+            <th scope="col">id</th>
+            <th scope="col">Статус</th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+          </tr>
+       </thead>
+        {% for st in status_all %}
+       <tbody>
+          <tr>
+            <th scope="row">{{ st.id }}</th>
+            <td>{{ st.status }}</td>
+            <td><a href="{% url 'status_name' st.id %}">Изменить</a></td>
+            <td>
+                <form id="status_name_delete{{st.id}}" action="{% url 'status_name_delete' st.id %}" method="post">
+                        {% csrf_token %}
+                </form>
+                <a href="javascript:void()" onclick="delete_question{{st.id}}()">Удалить</a>
+                <script>
+                    function delete_question{{st.id}}() {
+                        if (confirm("Вы уверены, что хотите удалить {{st.id}}?")) {
+                            document.getElementById('status_name_delete{{st.id}}').submit()
+                        }
+                    }
+                </script>
+            </td>
+          </tr>
+       </tbody>
+        {% endfor %}
+    </table>
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Создание статуса</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="add_form" method="post">
+            {% csrf_token %}
+            {{ form }}
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+        <button form="add_form" type="submit" class="btn btn-primary">Добавить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

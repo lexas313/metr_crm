@@ -1,0 +1,196 @@
+[
+    {
+        "model": "metrouchet_crm.status",
+        "pk": 1,
+        "fields": {
+            "status": "Выполнено"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.status",
+        "pk": 2,
+        "fields": {
+            "status": "Перенос"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.status",
+        "pk": 3,
+        "fields": {
+            "status": "Отказ"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.status",
+        "pk": 4,
+        "fields": {
+            "status": "Под ?"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.status",
+        "pk": 5,
+        "fields": {
+            "status": "В работе"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.companyservice",
+        "pk": 1,
+        "fields": {
+            "company_service": "Поверка счетчиков воды",
+            "service_price": 750
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.companyservice",
+        "pk": 2,
+        "fields": {
+            "company_service": "Замена счетчиков воды"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.companyservice",
+        "pk": 3,
+        "fields": {
+            "company_service": "Опломбировка",
+            "service_price": 800
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.watername",
+        "pk": 1,
+        "fields": {
+            "water_name": "Itelma",
+            "water_price": 3000
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.watername",
+        "pk": 2,
+        "fields": {
+            "water_name": "Valtec",
+            "water_price": 3000
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.service",
+        "pk": 1,
+        "fields": {
+            "service_name": 1,
+            "cold_water": 1,
+            "hot_water": 1,
+            "price": 1500,
+            "payment_master": 500
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.service",
+        "pk": 2,
+        "fields": {
+            "service_name": 2,
+            "water_name": 1,
+            "cold_water": 1,
+            "hot_water": 1,
+            "price": 6000,
+            "payment_master": 1000
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.client",
+        "pk": 1,
+        "fields": {
+            "phone": "89998887766",
+            "client_name": "Павел"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.client",
+        "pk": 2,
+        "fields": {
+            "phone": "89998881234",
+            "client_name": "Александр"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.address",
+        "pk": 1,
+        "fields": {
+            "street_house": "Москва, Поварская улица, 15к2",
+            "apartment": 999,
+            "entrance": 1,
+            "floor": 25,
+            "intercom": "999"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.address",
+        "pk": 2,
+        "fields": {
+            "street_house": "Москва, Марксистская улица, 5",
+            "apartment": 555,
+            "entrance": 9,
+            "floor": 7,
+            "intercom": "555"
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.order",
+        "pk": 1,
+        "fields": {
+            "author": 1,
+            "date_of_creation":"2024-11-27T14:09:43+03:00",
+            "start_time":"09:00",
+            "end_time":"12:00",
+            "address": 1,
+            "master": 1
+        }
+    },
+
+     {
+        "model": "metrouchet_crm.order",
+        "pk": 2,
+        "fields": {
+            "author": 1,
+            "date_of_creation":"2024-11-27T14:09:43+03:00",
+            "start_time":"12:00",
+            "end_time":"15:00",
+            "address": 2,
+            "master": 1
+        }
+    },
+
+     {
+        "model": "auth.group",
+        "pk": 1,
+        "fields": {
+            "name": "Мастер",
+            "permissions": []
+        }
+    },
+    {
+        "model": "auth.group",
+        "pk": 2,
+        "fields": {
+            "name": "Менеджер",
+            "permissions": []
+        }
+    }
+
+]

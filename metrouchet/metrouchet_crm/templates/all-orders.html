@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Все заявки
+{% endblock %}
+
+{% block content %}
+
+<!--{% if success %}-->
+<!--<p class="text-success">Успешно</p>-->
+<!--{% elif success == False %}-->
+<!--<p class="text-danger">Ошибка</p>-->
+<!--{% endif %}-->
+
+
+
+<h1 class="fs-2">Все заявки</h1>
+
+<div class="accordion" id="accordionExample">
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="headingOne">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+        Фильтр и поиск
+      </button>
+    </h2>
+    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+      <div class="accordion-body">
+        <!-- Форма фильтрации -->
+        <div class="row">
+            <form method="get" action="{% url 'all-orders' %}" class="row">
+                <div class="col-md-2 align-self-end">
+                    <label>Дата от:</label>
+                    {{ form.start_date }}
+                </div>
+                <div class="col-md-2 align-self-end">
+                    <label>Дата до:</label>
+                    {{ form.end_date }}
+                </div>
+                <div class="col-md-2 align-self-end">
+                    <label>Мастер:</label>
+                    {{ form.master }}
+                </div>
+                <div class="col-md-3 align-self-end">
+                    <label>Поиск:</label>
+                    {{ form.search }}
+                </div>
+                <div class="col-md-3 align-self-end">
+                    <button type="submit" class="btn btn-info" style="width: 100%;">Применить фильтр</button>
+                </div>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% if messages %}
+    <div class="alert alert-success">
+        {% for m in messages %}
+            {{m}}
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="table-responsive ">
+    <table class="table table-hover" style="font-size: 0.8em;">
+        <thead>
+            <tr>
+                <th scope="col">№ заявки</th>
+                <th scope="col">Дата соз.</th>
+                <th scope="col">Дата исп.</th>
+                <th scope="col">Время</th>
+                <th scope="col">Район</th>
+                <th scope="col">Адрес</th>
+                <th scope="col">Услуга</th>
+                <th scope="col">Сумма</th>
+                <th scope="col">Оплата</th>
+                <th scope="col">Клиент</th>
+                <th scope="col">Мастер</th>
+                <th scope="col">Статус</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        {% for i in list_orders %}
+        <tbody>
+            {% ifchanged i.execution_date %}
+                <tr style="background-color: #f2f2f2; text-align: center;"> <!-- Линия с отступом -->
+                    <td colspan="13" style="font-weight: bold; background-color: #dab1f2">{{ i.execution_date|date:"d.m.Y" }} {{ i.execution_date|date:"D" }} <i class="fa-solid fa-arrow-down-long" style="color: #000000;"></i> {% if i.execution_date|date:"d.m.Y" == today|date:"d.m.Y" %}Сегодня{% endif %} </td> <!-- Здесь 13 - общее количество столбцов -->
+                </tr>
+            {% endifchanged %}
+            <tr>
+                <th onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;" scope="row">{{ i.id }}</th>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">{{ i.date_of_creation|date:"d.m.Y" }}</td>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">{{ i.execution_date|date:"d.m.Y" }}</td>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">{{ i.start_time }}-{{ i.end_time }}</td>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">{{ i.address.district }}</td>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">{{ i.address }}, {{ i.address.apartment }}</td>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">
+                    {% for j in i.service.all %}
+                    {{ j.service_name }}:  {{ j.water_name.water_name }} (хвс {{ j.cold_water }}, гвс {{j.hot_water}})<br>
+                    {% endfor %}
+                </td>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">{{ i.total_price  }}</td>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">{{ i.total_payment_master  }}</td>
+                <td onclick="window.location='{% url 'update' i.id %}'" style="cursor: pointer;">
+                    {% for j in i.client.all %}
+                    {{ j.phone }} - {{ j.client_name }}<br>
+                    {% endfor %}
+                </td>
+
+                <td>
+                    <form action="{% url 'order_update_master' i.id %}" method="post" class="update-master-form">
+                        {% csrf_token %}
+                        <select name="master" class="master-selector form-control" data-order-id="{{ i.id }}" style="width: auto;">
+                            <option value="">---------</option>
+                            {% for master in masters %}
+                            <option value="{{ master.id }}" {% if i.master is not None and i.master.id == master.id %}selected{% endif %}>
+                                {{ master.get_full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </td>
+
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div id="status-icon-{{ i.id }}" class="me-1">
+                            {% if i.status.status == 'Выполнено' %}
+                                <i class="fa-solid fa-check fa-lg" style="color: #67db29;"></i>
+                            {% elif i.status.status == 'Перенос' %}
+                                <i class="fa-solid fa-arrow-right-arrow-left fa-lg" style="color: #eedd20;"></i>
+                            {% elif i.status.status == 'В работе' %}
+                                <i class="fa-solid fa-screwdriver-wrench fa-lg" style="color: #ea3ebc;"></i>
+                            {% elif i.status.status == 'Под вопросом' %}
+                                <i class="fa-solid fa-question fa-lg" style="color: #293447;"></i>
+                            {% elif i.status.status == 'Недозвон' %}
+                                <i class="fa-solid fa-phone-slash fa-lg" style="color: #378b81;"></i>
+                            {% elif i.status.status == 'Отказ' %}
+                                <i class="fa-solid fa-xmark fa-lg" style="color: #e13d3d;"></i>
+                            {% endif %}
+                        </div>
+                        <form action="{% url 'order_update_status' i.id %}" method="post" class="update-status-form ml-2">
+                            {% csrf_token %}
+                            <select name="status" class="status-selector form-control" data-order-id="{{ i.id }}" style="width: auto;">
+                                <option value="" {% if i.status is None %}selected{% endif %}>---------</option>
+                                {% for status in statuses %}
+                                <option value="{{ status.id }}" {% if i.status is not None and i.status.id == status.id %}selected{% endif %}>
+                                    {{ status }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                </td>
+                <td>
+                    <form id="delete_form{{i.id}}" action="{% url 'delete' i.id %}" method="post">
+                        {% csrf_token %}
+                    </form>
+                    <a class="btn btn-outline-danger" href="javascript:void()" onclick="delete_question{{i.id}}()">Удалить</a>
+                    <script>
+                        function delete_question{{i.id}}() {
+                            if (confirm("Вы уверены, что хотите удалить заявку {{i.id}}?")) {
+                                document.getElementById('delete_form{{i.id}}').submit()
+                            }
+                        }
+                    </script>
+                </td>
+            </tr>
+
+            {% if i.comments or i.comments_masters %}
+            <tr>
+                <td colspan="1"><i class="fa-solid fa-message fa-lg" style="color: #74C0FC;"></i> <i class="fa-solid fa-arrow-up" style="color: #b5b5b5;"></i></td>
+                <td colspan="7">{% if i.comments %}<b>Комментарий: </b>{{ i.comments }}{% endif %}</td>
+                <td colspan="7">{% if i.comments_masters %}<b>Комментарий мастера: </b>{{ i.comments_masters }}{% endif %}</td>
+            </tr>
+            {% endif %}
+
+        </tbody>
+        {% endfor %}
+    </table>
+</div>
+
+{% if list_orders.has_other_pages %}
+  <nav class="d-flex justify-content-center">
+    <ul class="pagination">
+      {% if list_orders.start_index %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ list_orders.paginator.page_range.0 }}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}{% if request.GET.master %}&master={{ request.GET.master }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Первая</a>
+        </li>
+      {% endif %}
+
+      {% if list_orders.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ list_orders.previous_page_number }}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}{% if request.GET.master %}&master={{ request.GET.master }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Предыдущая">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+      {% endif %}
+
+      {% for p in list_orders.paginator.page_range %}
+        {% if p >= list_orders.number|add:-2 and p <= list_orders.number|add:2 %}
+          <li class="page-item {% if list_orders.number == p %} active {% endif %}">
+            <a class="page-link" href="?page={{ p }}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}{% if request.GET.master %}&master={{ request.GET.master }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ p }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if list_orders.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ list_orders.next_page_number }}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}{% if request.GET.master %}&master={{ request.GET.master }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Следующая">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      {% endif %}
+
+      {% if list_orders.end_index %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ list_orders.paginator.page_range|last }}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}{% if request.GET.master %}&master={{ request.GET.master }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Последняя</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.status-selector').change(function() {
+            var $this = $(this);
+            var $form = $this.closest('form');
+            var orderID = $this.data('order-id');
+            var statusID = $this.val();
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: $form.attr('method'),
+                data: {status: statusID},
+                headers: {'X-CSRFToken': $form.find('[name=csrfmiddlewaretoken]').val()},
+                success: function(response) {
+                    if (response.status === 'Выполнено') {
+                        $('#status-icon-' + orderID).html('<i class="fa-solid fa-check fa-lg" style="color: #67db29;"></i>');
+                    } else if (response.status === 'Перенос') {
+                        $('#status-icon-' + orderID).html('<i class="fa-solid fa-arrow-right-arrow-left fa-lg" style="color: #eedd20;"></i>');
+                    } else if (response.status === 'В работе') {
+                        $('#status-icon-' + orderID).html('<i class="fa-solid fa-screwdriver-wrench fa-lg" style="color: #ea3ebc;"></i>');
+                    } else if (response.status === 'Под вопросом') {
+                        $('#status-icon-' + orderID).html('<i class="fa-solid fa-question fa-lg" style="color: #293447;"></i>');
+                    } else if (response.status === 'Недозвон') {
+                        $('#status-icon-' + orderID).html('<i class="fa-solid fa-phone-slash fa-lg" style="color: #378b81;"></i>');
+                    } else if (response.status === 'Отказ') {
+                        $('#status-icon-' + orderID).html('<i class="fa-solid fa-xmark fa-lg" style="color: #e13d3d;"></i>');
+                    } else {
+                        $('#status-icon-' + orderID).empty();
+                    }
+                },
+                error: function() {
+                    alert('Установлено пустое поле со статусом!');
+                }
+            });
+        });
+    });
+
+    $(document).ready(function() {
+        $('.master-selector').change(function() {
+            var $form = $(this).closest('form');
+            var orderID = $(this).data('order-id');
+            var masterID = $(this).val();
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: $form.attr('method'),
+                data: { master: masterID },
+                headers: {'X-CSRFToken': $form.find('[name=csrfmiddlewaretoken]').val()},
+                success: function(response) {
+                    // Вы можете обновить интерфейс пользователя или вывести сообщение
+                    // alert('Мастер назначен.');
+                },
+                error: function() {
+                    alert('Установлено пустое поле с мастером!');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

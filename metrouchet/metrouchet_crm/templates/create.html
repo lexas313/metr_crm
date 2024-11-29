@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Создать заявку
+{% endblock %}
+
+{% block content %}
+    <h1 class="fs-2">Создание заявки</h1>
+
+    {% if success %}
+        <p class="text-success">Заявка добавлена</p>
+    {% elif success == False %}
+        <p class="text-danger">Ошибка</p>
+    {% endif %}
+
+<div class="row">
+    <div class="col-md-6">
+    <form id="add_form" method="post">
+        {% csrf_token %}
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Статус заказа</h2>
+            <label>Статус</label>
+            {{ form.status }}
+        </div>
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Дата и время</h2>
+            <label>Дата исполнения:</label>
+            {{ form.execution_date }}
+            <div class="row">
+                <div class="col">
+                    <label>Время от:</label>
+                    {{ form.start_time }}
+                </div>
+                <div class="col">
+                    <label>Время до:</label>
+                    {{ form.end_time }}
+                </div>
+            </div>
+        </div>
+
+        <div class="shadow p-3 mb-3 bg-body rounded">
+        <h2 class="fs-5">Адрес клиента</h2>
+            <div>
+                <label>Район:</label>
+                {{ address_form.district }}
+            </div>
+            <div>
+                <label>Улица:</label>
+                {{ address_form.street_house }}
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Квартира:</label>
+                    {{ address_form.apartment }}
+                </div>
+                <div class="col">
+                    <label>Подъезд:</label>
+                    {{ address_form.entrance }}
+                </div>
+                <div class="col">
+                    <label>Этаж:</label>
+                    {{ address_form.floor }}
+                </div>
+                <div class="col">
+                    <label>Домофон:</label>
+                    {{ address_form.intercom }}
+                </div>
+            </div>
+        </div>
+
+<script>
+    $(document).ready(function() {
+        $('#id_address_form-district').select2();
+    });
+</script>
+
+<script type="text/javascript">
+ymaps.ready(init);
+
+var myMap; // Объявляем переменную для хранения ссылки на карту
+var suggestView; // Объявляем переменную для хранения ссылки на объект SuggestView
+
+function init() {
+    // Создаем карту
+    myMap = new ymaps.Map('map', {
+        center: [55.7558, 37.6173], // Координаты центра карты (Москва)
+        zoom: 10 // Уровень масштабирования карты
+    });
+
+    // Инициализация SuggestView с ограничением по области Москвы и Московской области
+    suggestView = new ymaps.SuggestView('{{ address_form.street_house.id_for_label }}', {
+        boundedBy: [
+            [55.503541, 36.771079], // Юго-Запад Московской области
+            [56.009657, 38.351852] // Северо-Восток Московской области
+        ]
+    });
+
+    // Обработчик события выбора адреса
+    suggestView.events.add('select', function (e) {
+        updateMap(e.get('item').value); // Обновляем карту при выборе адреса
+    });
+
+    // Обработчик события изменения значения в поле
+    suggestView.events.add('valuechange', function () {
+        // Если значение в поле пустое, то очищаем карту
+        if (!suggestView.state.get('selectedIndex')) {
+            clearMap();
+        }
+    });
+}
+
+function updateMap(selectedAddress) {
+    // Здесь можно выполнить геокодирование для получения координат адреса
+    // После получения координат можно поставить метку на карте
+    ymaps.geocode(selectedAddress)
+        .then(function (res) {
+            var firstGeoObject = res.geoObjects.get(0);
+            var coords = firstGeoObject.geometry.getCoordinates();
+
+            // Очищаем карту перед добавлением новой метки
+            myMap.geoObjects.removeAll();
+
+            // Добавляем метку на карту
+            myMap.geoObjects.add(new ymaps.Placemark(coords, {
+                balloonContent: selectedAddress
+            }));
+        });
+}
+
+function clearMap() {
+    // Очищаем карту при удалении текста из поля
+    myMap.geoObjects.removeAll();
+}
+</script>
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Услуга</h2>
+            <div id="service-formset">
+                {{ service_formset.management_form }}
+                {% for service_form in service_formset %}
+                    <div class="service-form border border-secondary rounded-2 p-2 mb-1" id="service_form_{{ forloop.counter }}">
+                        <div class="mb-2">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label>Услуга:</label>
+                                    {{ service_form.service_name }}
+                                </div>
+                                <div class="water_name_block col-md-6" id="water_name_block_{{ forloop.counter }}" style="display: none;">
+                                    <label>Модель счетчика:</label>
+                                    {{ service_form.water_name }}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 align-self-end">
+                                    <label>🔵Холодных счетчиков:</label>
+                                    {{ service_form.cold_water }}
+                                </div>
+                                <div class="col-md-3 align-self-end">
+                                    <label>🔴Горячих счетчиков:</label>
+                                    {{ service_form.hot_water }}
+                                </div>
+                                <div class="col-md-3 align-self-end">
+                                    <label>Сумма:</label>
+                                    {{ service_form.price }}
+                                </div>
+                                <div class="col-md-3 align-self-end">
+                                    <label>Оплата мастеру:</label>
+                                    {{ service_form.payment_master }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+<script type="text/javascript">
+$(document).ready(function () {
+    // Обработчик события для полей cold_water и hot_water
+    $('#service-formset').on('input', '.service-form [name$="cold_water"], [name$="hot_water"]', function () {
+        var serviceForm = $(this).closest('.service-form');
+        var selectedService = serviceForm.find('select[name$="service_name"]').val();
+
+        if (selectedService === '2') {
+            updatePrice(serviceForm);
+        } else {
+            updateServicePrice(serviceForm);
+        }
+    });
+
+    // Обработчик события для поля service_name
+    $('#service-formset').on('change', '.service-form select[name$="service_name"]', function () {
+        var selectedService = $(this).val();
+        var serviceForm = $(this).closest('.service-form');
+        var waterNameBlock = serviceForm.find('.water_name_block');
+
+        if (selectedService === '2') {
+            waterNameBlock.show();
+            updatePrice(serviceForm);
+        } else {
+            waterNameBlock.hide().find('select[name$="water_name"]').val('');
+            updateServicePrice(serviceForm);
+        }
+    });
+
+    // Обработчик события для поля water_name
+    $('#service-formset').on('change', '.service-form select[name$="water_name"]', function () {
+        var serviceForm = $(this).closest('.service-form');
+
+        // Проверка, чтобы избежать вызова updatePrice для случаев, когда выбран сервис с id не равным 2
+        if (serviceForm.find('select[name$="service_name"]').val() === '2') {
+            updatePrice(serviceForm);
+        }
+    });
+
+    // Функция для обновления цены
+    function updatePrice(container) {
+        var waterNameId = container.find('.water_name_block select[name$="water_name"]').val() || 0;
+        var coldWater = parseInt(container.find('[name$="cold_water"]').val()) || 0;
+        var hotWater = parseInt(container.find('[name$="hot_water"]').val()) || 0;
+
+        var data = {
+            'water_name_id': waterNameId,
+            'cold_water': coldWater,
+            'hot_water': hotWater,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '{% url "get_water_price" %}',
+            data: data,
+            dataType: 'json',
+            success: function (response) {
+                var waterPrice = response.water_price || 0;
+                var totalPrice = waterPrice;
+
+                container.find('[name$="price"]').val(totalPrice.toFixed(2));
+            },
+            error: function (error) {
+                console.log('Error:', error);
+            }
+        });
+    }
+
+    // Функция для обновления цены услуги
+    function updateServicePrice(container) {
+        var serviceId = container.find('[name$="service_name"]').val();
+        var coldWater = parseInt(container.find('[name$="cold_water"]').val()) || 0;
+        var hotWater = parseInt(container.find('[name$="hot_water"]').val()) || 0;
+
+        var data = {
+            'service_id': serviceId,
+            'cold_water': coldWater,
+            'hot_water': hotWater,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '{% url "get_service_price" %}',
+            data: data,
+            dataType: 'json',
+            success: function (response) {
+                var servicePrice = response.service_price || 0;
+                var totalPrice = servicePrice;
+
+                container.find('[name$="price"]').val(totalPrice.toFixed(2));
+            },
+            error: function (error) {
+                console.log('Error:', error);
+            }
+        });
+    }
+});
+</script>
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Телефон клиента</h2>
+            <div id="client-formset">
+                {{ client_formset.management_form }}
+                {% for client_form in client_formset.forms %}
+                <div class="border border-secondary rounded-2 p-2 mb-1">
+                    <div class="client-form row mb-2">
+                        <div class="col-md-6">
+                            <label>Телефон:</label>
+                            {{ client_form.phone }}
+                        </div>
+                        <div class="col-md-6">
+                            <label>Имя клиента:</label>
+                            {{ client_form.client_name }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+<script>
+    $(document).ready(function () {
+        $('#service-formset').formset({
+            addText: 'Добавить услугу',
+            deleteText: 'Удалить услугу',
+            prefix: 'service_form',
+            addCssClass: 'text-success',
+            deleteCssClass: 'text-danger',
+            removed: function (row) {
+                row.find('input[name$="DELETE"]').prop('checked', true);
+            }
+        });
+
+        $('#add-service-form').on('click', function() {
+            $('#service-formset').formset('addForm');
+        });
+
+            $('#client-formset').formset({
+            addText: 'Добавить клиента',
+            deleteText: 'Удалить клиента',
+            prefix: 'client_form',
+            addCssClass: 'text-success',
+            deleteCssClass: 'text-danger',
+            removed: function (row) {
+                row.find('input[name$="DELETE"]').prop('checked', true);
+            }
+        });
+
+        $('#add-client-form').on('click', function() {
+            $('#client-formset').formset('addForm');
+        });
+
+        // Обработка изменения номера телефона
+        $(document).on('change', 'input[name$="phone"]', function () {
+            var $this = $(this);
+            var phoneValue = $this.val();
+            $.ajax({
+                url: '/get-client-name/',  // URL, который вы установили в urls.py
+                data: {
+                    'phone': phoneValue
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.client_name) {
+                        $this.closest('.client-form').find('input[name$="client_name"]').val(data.client_name);
+                    }
+                }
+            });
+        });
+    });
+</script>
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Комментарий</h2>
+            <label>Комментарий</label>
+            {{ form.comments }}
+        </div>
+        <div class="shadow p-3 mb-3 bg-body rounded">
+            <h2 class="fs-5">Исполнитель</h2>
+            <label>Мастер</label>
+            {{ form.master }}
+        </div>
+
+        <div class="modal-footer">
+            <div class="m-4"><a class="btn btn-outline-primary" href="{{request.META.HTTP_REFERER|escape}}">Назад</a></div>
+            <button form="add_form" type="submit" class="btn btn-primary">Добавить</button>
+        </div>
+    </form>
+
+    </div>
+    <div class="col-md-6">
+        <div id="map" style="width: 100%; height: 400px;"></div>
+    </div>
+</div>
+
+
+<script>
+    var formIsSaved = false;
+
+    // Обработчик события отправки формы
+    $('#add_form').on('submit', function() {
+        formIsSaved = true;
+    });
+
+    // Обработчик события изменения значений формы
+    $('#add_form').on('change input', ':input', function() {
+        formIsSaved = false;
+    });
+
+    // Обработчик события beforeunload
+    $(window).on('beforeunload', function (e) {
+        if (!formIsSaved) {
+            var confirmationMessage = 'Вы действительно хотите покинуть страницу?';
+            e.returnValue = confirmationMessage;
+            return confirmationMessage;
+        }
+    });
+</script>
+
+{% endblock %}

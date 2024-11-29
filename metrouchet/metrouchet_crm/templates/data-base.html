@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Страница заявок
+{% endblock %}
+
+{% block content %}
+<h1 class="fs-2">Заявки</h1>
+
+{% if messages %}
+    <div class="alert alert-success">
+        {% for m in messages %}
+            {{m}}
+        {% endfor %}
+    </div>
+{% endif %}
+<div class="mb-4">
+    <a href="{% url 'today_orders' %}" class="btn btn-info {% if request.resolver_match.url_name == 'today_orders' %}active disabled{% endif %}">Сегодня</a>
+    <a href="{% url 'tomorrow_orders' %}" class="btn btn-info {% if request.resolver_match.url_name == 'tomorrow_orders' %}active disabled{% endif %}">Завтра</a>
+    <a href="{% url 'all_orders' %}" class="btn btn-info {% if request.resolver_match.url_name == 'all_orders' %}active disabled{% endif %}">Все заявки</a>
+</div>
+
+<div id="order-container">
+    {% for i in list_orders %}
+        <div style="font-size: 0.8em;">
+            <a class="order-row nav-link" href="{% url 'details' pk=i.id %}">
+                <div class="row">
+                    <div class="col-auto bg-success text-white rounded-3">№ {{ i.id }}</div>
+                    {% if i.status %}
+                    <div class="col-auto bg-info text-white rounded-3"> {{ i.status }} </div>
+                    {% endif %}
+                    <div class="col text-end"><ins class="underline-red">{{ i.execution_date }} {{ i.start_time }}-{{ i.end_time }}</ins></div>
+                </div>
+                <div class="row">
+                    <div class="col"><b>Адрес:</b> р-н {{ i.address.district }}, {{ i.address }}, кв {{ i.address.apartment }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-auto pe-1">
+                        <b>Услуга:</b>
+                    </div>
+                    <div class="col ps-0">
+                        {% for j in i.service.all %}
+                        {{ j.service_name }}: {{ j.water_name.water_name }} (хвс {{ j.cold_water }}, гвс {{ j.hot_water }})<br>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"><b>Сумма:</b> {{ i.total_price }}</div>
+                    <div class="col text-end"><b>Мастеру:</b> {{ i.total_payment_master }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-auto pe-1">
+                        <b>Клиент:</b>
+                    </div>
+                    <div class="col ps-0">
+                        {% for j in i.client.all %}
+                        {{ j.phone }} - {{ j.client_name }}<br>
+                        {% endfor %}
+                    </div>
+                    {% if i.comments %}
+                    <div class="col text-end">
+                        <b>Комментарий:</b>
+                        {{ i.comments }}
+                    </div>
+                    {% endif %}
+                 </div>
+            </a>
+        </div>
+    <hr>
+    {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="d-flex justify-content-center">
+  <ul class="pagination">
+      {% if page_obj.start_index %}
+      <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.paginator.page_range.0 }}">Первая</a>
+        </li>
+      {% endif %}
+
+    {% if page_obj.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Предыдущая">
+        <span aria-hidden="true">&laquo;</span>
+      </a>
+    </li>
+    {% endif %}
+
+    {% for p in page_obj.paginator.page_range %}
+    {% if p >= page_obj.number|add:-2 and p <= page_obj.number|add:2 %}
+    <li class="page-item {% if page_obj.number == p %} active {% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+    {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Следующая">
+        <span aria-hidden="true">&raquo;</span>
+      </a>
+    </li>
+    {% endif %}
+
+      {% if page_obj.end_index %}
+      <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.paginator.page_range|last }}">Последняя</a>
+        </li>
+      {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% endblock %}
+

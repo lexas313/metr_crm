@@ -1,0 +1,6 @@
+
+/* CSS красной линии в заявках у местеров под датой */
+.underline-red {
+    text-decoration: underline;
+    text-decoration-color: red; /* Используйте #FF0000 для точного красного цвета */
+}

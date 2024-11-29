@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Авторизация
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4 mt-5">
+      <h1 class="text-center">Авторизация</h1>
+      <div class="card p-4 mt-3">
+        <form id="add_form" method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+        </form>
+        <button form="add_form" type="submit" class="btn btn-primary mt-4">Войти</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

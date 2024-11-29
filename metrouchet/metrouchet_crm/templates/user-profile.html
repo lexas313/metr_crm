@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Профиль
+{% endblock %}
+
+{% block content %}
+<h1 class="fs-2 mb-4">Профиль пользователя: {{ user.get_full_name }}</h1>
+<div class="mb-5">
+  <form method="get">
+    <div class="row">
+      {% if user.is_superuser %}
+      <div class="col align-self-end">
+          <label>Мастер:</label>
+          {{ filter_form.user }}
+      </div>
+      {% endif %}
+      <div class="col align-self-end">
+        <label>Дата от:</label>
+        {{ filter_form.start_date }}
+      </div>
+      <div class="col align-self-end">
+        <label>Дата до:</label>
+        {{ filter_form.end_date }}
+      </div>
+      <div class="col align-self-end">
+        <input type="submit" class="btn btn-info" value="Применить фильтр">
+      </div>
+    </div>
+  </form>
+</div>
+<!--<div class="profile">-->
+
+
+<!--  <div class="verifications">-->
+<!--    <p>Количество всех выполненных заявок: {{ all_orders_count }}</p>-->
+<!--    <p>Количество выполненных поверок: {{ verifications_count }}</p>-->
+<!--    <p>Количество выполненных замен: {{ replacements_count }}</p>-->
+<!--    <p>Суммарное количество поверенных счетчиков: {{ sum_verifications_water }}</p>-->
+<!--    <p>Суммарное количество замененных счетчиков: {{ sum_replacements_water }}</p>-->
+<!--  </div>-->
+
+<!--  <div>-->
+<!--    <h3> Выполненные заявки по дням</h3>-->
+<!--    {% for d in date_wise_orders %}-->
+<!--      <p>Дата: {{ d.execution_date }} Кол-во заявок: {{ d.total_orders }}</p>-->
+<!--    {% endfor %}-->
+<!--  </div>-->
+
+<!--    <div>-->
+<!--    <h3> Поверенные счетчики по дням</h3>-->
+<!--    {% for p in verifications_by_day %}-->
+<!--      <p>Дата: {{ p.date }} Кол-во поверок: {{ p.total_verifications }}</p>-->
+<!--    {% endfor %}-->
+<!--  </div>-->
+
+<!--  <div>-->
+<!--    <h3> Замененные счетчики по дням</h3>-->
+<!--    {% for r in replacements_by_day %}-->
+<!--      <p>Дата: {{ r.date }} Кол-во замен: {{ r.total_replacements }}</p>-->
+<!--    {% endfor %}-->
+<!--  </div>-->
+<!--</div>-->
+
+
+<table class="table">
+  <thead>
+    <tr class="text-success">
+      <th scope="col">Итог</th>
+      <th scope="col">{{ all_orders_count }}</th>
+      <th scope="col">{{ sum_verifications_water }}</th>
+      <th scope="col">{{ sum_replacements_water }}</th>
+      <th scope="col">{{ sum_commissioning_water }}</th>
+      <th scope="col">{{ sum_sealing_water }}</th>
+      <th scope="col">{{ sum_taking_control_readings_water }}</th>
+      <th scope="col">{{ sum_other_services_water }}</th>
+      <th scope="col">{{ total_service_amount }}</th>
+      <th scope="col">{{ total_payment_to_master }}</th>
+
+    </tr>
+  </thead>
+  <thead>
+    <tr>
+      <th scope="col" class="align-top">Дата</th>
+      <th scope="col" class="align-top">Выполненных заявок</th>
+      <th scope="col" class="align-top">Поверенных сч-в</th>
+      <th scope="col" class="align-top">Замененных сч-в</th>
+      <th scope="col" class="align-top">Ввод в эксп сч-в</th>
+      <th scope="col" class="align-top">Опломбировано сч-в</th>
+      <th scope="col" class="align-top">Снятие к.п. сч-в</th>
+      <th scope="col" class="align-top">Остальное</th>
+      <th scope="col" class="align-top">Сумма</th>
+      <th scope="col" class="align-top">Оплата мастеру</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for date_info in combined_data_by_date %}
+    <tr>
+      <td>{{ date_info.date }}</td>
+      <td>{{ date_info.total_orders }}</td>
+      <td>{{ date_info.total_verifications }}</td>
+      <td>{{ date_info.total_replacements }}</td>
+      <td>{{ date_info.total_commissioning }}</td>
+      <td>{{ date_info.total_sealing }}</td>
+      <td>{{ date_info.total_taking_control_readings }}</td>
+      <td>{{ date_info.total_other_services }}</td>
+      <td>{{ date_info.daily_sum }}</td>
+      <td>{{ date_info.daily_payment_master }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if combined_data_by_date.has_other_pages %}
+  <nav class="d-flex justify-content-center">
+    <ul class="pagination">
+      {% if combined_data_by_date.start_index %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ combined_data_by_date.paginator.page_range.0 }}{% if filter_form.user.value %}&user={{ filter_form.user.value }}{% endif %}{% if filter_form.start_date.value %}&start_date={{ filter_form.start_date.value }}{% endif %}{% if filter_form.end_date.value %}&end_date={{ filter_form.end_date.value }}{% endif %}">Первая</a>
+        </li>
+      {% endif %}
+
+      {% if combined_data_by_date.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ combined_data_by_date.previous_page_number }}{% if filter_form.user.value %}&user={{ filter_form.user.value }}{% endif %}{% if filter_form.start_date.value %}&start_date={{ filter_form.start_date.value }}{% endif %}{% if filter_form.end_date.value %}&end_date={{ filter_form.end_date.value }}{% endif %}" aria-label="Предыдущая">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+      {% endif %}
+
+      {% for p in combined_data_by_date.paginator.page_range %}
+        {% if p >= combined_data_by_date.number|add:-2 and p <= combined_data_by_date.number|add:2 %}
+          <li class="page-item {% if combined_data_by_date.number == p %} active {% endif %}">
+            <a class="page-link" href="?page={{ p }}{% if filter_form.user.value %}&user={{ filter_form.user.value }}{% endif %}{% if filter_form.start_date.value %}&start_date={{ filter_form.start_date.value }}{% endif %}{% if filter_form.end_date.value %}&end_date={{ filter_form.end_date.value }}{% endif %}">{{ p }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+
+      {% if combined_data_by_date.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ combined_data_by_date.next_page_number }}{% if filter_form.user.value %}&user={{ filter_form.user.value }}{% endif %}{% if filter_form.start_date.value %}&start_date={{ filter_form.start_date.value }}{% endif %}{% if filter_form.end_date.value %}&end_date={{ filter_form.end_date.value }}{% endif %}" aria-label="Следующая">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      {% endif %}
+
+      {% if combined_data_by_date.end_index %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ combined_data_by_date.paginator.page_range|last }}{% if filter_form.user.value %}&user={{ filter_form.user.value }}{% endif %}{% if filter_form.start_date.value %}&start_date={{ filter_form.start_date.value }}{% endif %}{% if filter_form.end_date.value %}&end_date={{ filter_form.end_date.value }}{% endif %}">Последняя</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+
+<div class="modal-footer">
+    <div class="m-4">
+        <a class="btn btn-outline-primary" href="{{ request.META.HTTP_REFERER|default:'/'|escape }}">Назад</a>
+    </div>
+</div>
+{% endblock %}

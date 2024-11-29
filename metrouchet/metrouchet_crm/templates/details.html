@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Заявка
+{% endblock %}
+
+{% block content %}
+<h3>Заявка № {{ get_orders.id }}</h3>
+<div>
+    <ul class="list-group">
+        <li class="list-group-item"><b>Дата создания:</b> {{ get_orders.date_of_creation }}</li>
+        <li class="list-group-item"><b>Дата выполнения:</b> {{ get_orders.execution_date }}</li>
+        <li class="list-group-item"><b>Время:</b> {{ get_orders.start_time }}-{{ get_orders.end_time }}</li>
+        <li class="list-group-item"><b>Район:</b> {{ get_orders.address.district }}</li>
+        <li class="list-group-item"><b>Адрес:</b> {{ get_orders.address.street_house }} кв: {{ get_orders.address.apartment }}</li>
+        <li class="list-group-item">
+            <b>Инфо. о адресе:</b> подъезд: {{ get_orders.address.entrance }}, этаж: {{ get_orders.address.floor }}, домофон: {{ get_orders.address.intercom }}
+        </li>
+        <li class="list-group-item">
+          <table style="width:auto;">
+            <tr>
+              <td style="vertical-align: top;"><b>Услуга:</b></td>
+              <td>
+                <div class="ms-1">
+                  {% for servic in get_orders.service.all %}
+                     -{{ servic.service_name }}: {{ servic.water_name.water_name }}
+                    (<span style="color: blue;">хвс</span> {{ servic.cold_water }}, <span style="color: red;">гвс</span> {{servic.hot_water}})
+                     Цена: {{servic.price}}
+                     <br>
+                  {% endfor %}
+                </div>
+              </td>
+            </tr>
+          </table>
+        </li>
+        <li class="list-group-item"><b>Сумма:</b> {{ get_orders.total_price }}</li>
+        <li class="list-group-item"><b>Оплата мастару:</b> {{ get_orders.total_payment_master }}</li>
+        <li class="list-group-item">
+          <table style="width:auto;">
+            <tr>
+              <td style="vertical-align: top;"><b>Телефон:</b></td>
+              <td>
+                <div class="ms-1">
+                    {% for j in get_orders.client.all %}
+                        {{ j.phone }} - {{ j.client_name }} <a href="tel:{{ j.phone }}"><i class="fa-solid fa-phone" style="color: #16d456;"></i></a><br>
+                    {% endfor %}
+                </div>
+              </td>
+            </tr>
+          </table>
+        </li>
+        <li class="list-group-item"><b>Мастер:</b> {{ get_orders.master.get_full_name }}</li>
+        <li class="list-group-item"><b>Комментарий оператора:</b>{% if get_orders.comments %}{{ get_orders.comments }}{% endif %}</li>
+    </ul>
+</div>
+
+
+<form id="update_photo_form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div id="form" class="my-4 shadow p-3 mb-5 bg-body rounded">
+        <h2 class="fs-5">Статус заявки</h2>
+        <label>Статус:</label>
+        {{ form.status }}
+        <h2 class="fs-5">Комментарий мастера</h2>
+        <label>Комментарий мастера:</label>
+        {{ form.comments_masters }}
+    </div>
+    <div class="row">
+        <div class="col">
+            <div id="water-photo-formset" class="shadow p-3 mb-3 bg-body rounded">
+                <h2 class="fs-5">Фото счетчиков</h2>
+                <!-- Формсет для фотографий счетчиков -->
+                {{ water_photo_formset.management_form }}
+                {% for water in water_photo_formset.forms %}
+                    <div class="water-photo-form border border-secondary rounded-2 p-2 mb-1">
+                        {{ water.id }}
+                        {{ water }}
+                        <div class="image-preview mb-3">
+                            <img src="" alt="Image Preview" class="img-thumbnail mt-2" style="display: none; width: 100px; height: auto;">
+                        </div>
+                        {% if water.instance.water_photo %}
+                           <a href="{{ water.instance.water_photo.url }}" data-fancybox data-caption="Фото счетчика" style="text-decoration: none;">
+                               <img src="{{ water.instance.water_photo.url }}" class="img-thumbnail mt-2" alt="Фото счетчика" style="width: 100px; height: auto;">
+                           </a>
+                        {% endif %}
+                        {{ water.DELETE }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col">
+            <div id="document-photo-formset" class="shadow p-3 mb-3 bg-body rounded">
+                <h2 class="fs-5">Фото документов</h2>
+                <!-- Формсет для фотографий документов -->
+                {{ document_photo_formset.management_form }}
+                {% for document in document_photo_formset.forms %}
+                    <div class="document-photo-form border border-secondary rounded-2 p-2 mb-1">
+                        {{ document.id }}
+                        {{ document }}
+                        <div class="image-preview mb-3">
+                            <img src="" alt="Image Preview" class="img-thumbnail mt-2" style="display: none; width: 100px; height: auto;">
+                        </div>
+                        {% if document.instance.document_photo %}
+                           <a href="{{ document.instance.document_photo.url }}" data-fancybox data-caption="Фото документа" style="text-decoration: none;">
+                               <img src="{{ document.instance.document_photo.url }}" class="img-thumbnail mt-2" alt="Фото документа" style="width: 100px; height: auto;">
+                           </a>
+                        {% endif %}
+                        {{ document.DELETE }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer justify-content-md-center">
+        <div class="m-4"><a class="btn btn-outline-primary" href="{{request.META.HTTP_REFERER|escape}}">Назад</a></div>
+        {% if editing %}
+        <div><button form="update_photo_form" type="submit" class="btn btn-primary">Сохранить</button></div>
+        {% endif %}
+    </div>
+
+</form>
+
+
+
+<!-- Подключение библиотеки django-formset-js -->
+{% load static %}
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="{% static 'js/jquery.formset.js' %}"></script>
+
+<script>
+    Fancybox.bind('[data-fancybox]', {
+    //
+    });
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#water-photo-formset').formset({
+            addText: 'Добавить фото',
+            deleteText: 'Удалить фото',
+            prefix: 'water_photo_form',
+            addCssClass: 'text-success',
+            deleteCssClass: 'text-danger',
+            removed: function (row) {
+                row.find('input[name$="DELETE"]').prop('checked', true);
+            }
+        });
+
+        $('#add-water-photo-formset').on('click', function() {
+            $('#water-photo-formset').formset('addForm');
+        });
+    });
+
+    $(document).ready(function () {
+        $('#document-photo-formset').formset({
+            addText: 'Добавить фото',
+            deleteText: 'Удалить фото',
+            prefix: 'document_photo_form',
+            addCssClass: 'text-success',
+            deleteCssClass: 'text-danger',
+            removed: function (row) {
+                row.find('input[name$="DELETE"]').prop('checked', true);
+            }
+        });
+
+        $('#add-document-photo-formset').on('click', function() {
+            $('#document-photo-formset').formset('addForm');
+        });
+
+        // Обработчик предварительного просмотра изображений для water-photo-formset
+        $('#water-photo-formset').on('change', 'input[type="file"]', function (event) {
+            var input = event.currentTarget;
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $(input).closest('.water-photo-form').find('.image-preview img').attr('src', e.target.result).show();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+
+        // Обработчик предварительного просмотра изображений для document-photo-formset
+        $('#document-photo-formset').on('change', 'input[type="file"]', function (event) {
+            var input = event.currentTarget;
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $(input).closest('.document-photo-form').find('.image-preview img').attr('src', e.target.result).show();
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    ymaps.ready(init);
+
+    function init() {
+        var myMap = new ymaps.Map('map', {
+            center: [55.7558, 37.6173], // Координаты центра карты по умолчанию (Москва)
+            zoom: 10
+        });
+
+        var fullAddress = "{{ get_orders.address.street_house }}, подъезд: {{ get_orders.address.entrance }}";
+        ymaps.geocode(fullAddress).then(function (res) {
+            var firstGeoObject = res.geoObjects.get(0);
+            var coords = firstGeoObject.geometry.getCoordinates();
+            var placemark = new ymaps.Placemark(coords, {
+                balloonContent: fullAddress
+            });
+            myMap.geoObjects.add(placemark);
+            myMap.setCenter(coords, 14);
+        });
+    }
+</script>
+
+<div class="border border-info border-3 rounded-3 mb-4 p-1" id="map" style="width: 100%; height: 400px;"></div>
+{% endblock %}
