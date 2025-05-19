@@ -64,7 +64,7 @@
 {% endif %}
 
 <div class="table-responsive ">
-    <table class="table table-hover" style="font-size: 0.8em;">
+    <table class="table table-hover table-borderless" style="font-size: 0.8em;">
         <thead>
             <tr>
                 <th scope="col">№ заявки</th>
@@ -176,7 +176,24 @@
             </tr>
             {% endif %}
 
+            {% if i.water_photo.all or i.document_photo.all %}
+            <tr>
+                <td colspan="13">
+                    <div>
+                        {% for j in i.water_photo.all %}
+                        <img src="{{ j.water_photo.url }}" alt="" class="rounded-circle" style="width: 40px; height: 40px;">
+                        {% endfor %}
+                        {% for j in i.document_photo.all %}
+                        <img src="{{ j.document_photo.url }}" alt="" class="rounded-circle" style="width: 40px; height: 40px;">
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
         </tbody>
+        <tr>
+            <td colspan="13" style="border-top: 2px solid #dab1f2; padding: 0; margin: 0;"></td>
+        </tr>
         {% endfor %}
     </table>
 </div>

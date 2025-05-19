@@ -92,7 +92,7 @@ class TomorrowOrdersListView(LoginRequiredMixin, ListView):
 
 
 class AllOrdersListView(LoginRequiredMixin, ListView):
-    paginate_by = 20
+    paginate_by = 25
     model = Order
     template_name = 'data-base.html'
     context_object_name = 'list_orders'
@@ -299,7 +299,7 @@ class OrderEditView(LoginRequiredMixin, UserPassesTestMixin, CustomSuccessMessag
         filtered_orders = self.get_filtered_orders(form)
 
         # Пагинация
-        paginator = Paginator(filtered_orders, 25)  # Например, 10 заявок на страницу
+        paginator = Paginator(filtered_orders, 40)  # Например, 10 заявок на страницу
         page = self.request.GET.get('page')
         context['list_orders'] = paginator.get_page(page)
 

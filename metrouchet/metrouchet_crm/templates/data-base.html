@@ -29,7 +29,7 @@
                     {% if i.status %}
                     <div class="col-auto bg-info text-white rounded-3"> {{ i.status }} </div>
                     {% endif %}
-                    <div class="col text-end"><ins class="underline-red">{{ i.execution_date }} {{ i.start_time }}-{{ i.end_time }}</ins></div>
+                    <div class="col text-end"><ins class="underline-red">{{ i.execution_date }} <b>{{ i.start_time }}-{{ i.end_time }}</b></ins></div>
                 </div>
                 <div class="row">
                     <div class="col"><b>Адрес:</b> р-н {{ i.address.district }}, {{ i.address }}, кв {{ i.address.apartment }}</div>
@@ -40,7 +40,7 @@
                     </div>
                     <div class="col ps-0">
                         {% for j in i.service.all %}
-                        {{ j.service_name }}: {{ j.water_name.water_name }} (хвс {{ j.cold_water }}, гвс {{ j.hot_water }})<br>
+                            {{ j.service_name }}: {{ j.water_name.water_name }} ({% if j.cold_water %}<span class="text-primary">хвс {{ j.cold_water }}</span>{% if j.cold_water and j.hot_water %},&nbsp;{% endif %}{% endif %}{% if j.hot_water %}<span class="text-danger">гвс {{ j.hot_water }}</span>{% endif %})<br>
                         {% endfor %}
                     </div>
                 </div>
@@ -57,13 +57,31 @@
                         {{ j.phone }} - {{ j.client_name }}<br>
                         {% endfor %}
                     </div>
-                    {% if i.comments %}
-                    <div class="col text-end">
-                        <b>Комментарий:</b>
-                        {{ i.comments }}
                     </div>
-                    {% endif %}
-                 </div>
+                    <div class="d-flex">
+                     {% if i.comments %}
+                     <div class="w-50 me-1" style="color: #852c2c;">
+                         <b>Комментарий:</b>
+                         {{ i.comments }}
+                     </div>
+                     {% endif %}
+                     {% if i.comments_masters %}
+                     <div class="w-50 text-end" style="color: #852c2c;">
+                         <b>Коммент. мастера:</b>
+                         {{ i.comments_masters }}
+                     </div>
+                     {% endif %}
+                </div>
+                <div class="row">
+                    <div>
+                        {% for j in i.water_photo.all %}
+                        <img src="{{ j.water_photo.url }}" alt="" class="rounded-circle" style="width: 40px; height: 40px;">
+                        {% endfor %}
+                        {% for j in i.document_photo.all %}
+                        <img src="{{ j.document_photo.url }}" alt="" class="rounded-circle" style="width: 40px; height: 40px;">
+                        {% endfor %}
+                    </div>
+                </div>
             </a>
         </div>
     <hr>
